@@ -17,3 +17,12 @@
     > git push origin master
 
 * git이 없다고 뜰 경우, https://git-scm.com/downloads 에서 다운로드를 받는다.
+
+
+#### 팀원 프로젝트 수행중인 폴더
+| 이름        | 폴더           |
+| :-------------: |:-------------:|
+| 김동호      | /Application |
+| 김미수      | /Server |
+| 김성현      | /Terminal |
+| 공통      | /     |
