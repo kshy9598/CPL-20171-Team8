@@ -30,8 +30,10 @@ public class MyService extends Service {
     int readBufferPositon;
 
     MediaPlayer mp;
+
     public MyService() {
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         // Service 객체와 (화면단 Activity 사이에서)
@@ -39,14 +41,16 @@ public class MyService extends Service {
         // 데이터를 전달할 필요가 없으면 return null;
         return null;
     }
+
     @Override
     public void onCreate() {
         super.onCreate();
         // 서비스에서 가장 먼저 호출됨(최초에 한번만)
         Log.d("test", "서비스의 onCreate");
         mp = MediaPlayer.create(this, R.raw.chacha);
-        mp.setLooping(true); // 반복재생
+        mp.setLooping(false); // 반복재생
     }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // 서비스가 호출될 때마다 실행
@@ -55,7 +59,9 @@ public class MyService extends Service {
         connectToSelectedDevices(device_name);
 
         //mp.start(); // 노래 시작
-        return super.onStartCommand(intent, flags, startId);
+        //AccidentCheck("name");
+        //return super.onStartCommand(intent, flags, startId);
+        return START_REDELIVER_INTENT;
     }
 
     @Override
@@ -66,7 +72,8 @@ public class MyService extends Service {
             mOutputStream.close();
             mSocket.close();
             mp.stop(); // 음악 종료
-        } catch(Exception e) { }
+        } catch (Exception e) {
+        }
         Log.d("test", "서비스의 onDestroy");
         super.onDestroy();
     }
@@ -78,8 +85,8 @@ public class MyService extends Service {
         mPairedDeviceCount = mDevices.size();
         BluetoothDevice selectedDevice = null;
 
-        for(BluetoothDevice device : mDevices) {
-            if(name.equals(device.getName())) {
+        for (BluetoothDevice device : mDevices) {
+            if (name.equals(device.getName())) {
                 selectedDevice = device;
                 break;
             }
@@ -91,8 +98,6 @@ public class MyService extends Service {
     void connectToSelectedDevices(String selectedDeviceName) {
         BluetoothDevice mRemoteDevice = getDeviceFromBondedList(selectedDeviceName);
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-        mp.start(); // 노래 시작
-
         try {
             // 소켓 생성
             mSocket = mRemoteDevice.createRfcommSocketToServiceRecord(uuid);
@@ -105,34 +110,35 @@ public class MyService extends Service {
 
             // 데이터 수신 준비
             beginListenForData();
-        }catch(Exception e) {
+        } catch (Exception e) {
             // 블루투스 연결 중 오류 발생
-            Toast.makeText(getApplicationContext(),"Connecft Error",Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Connecft Error", Toast.LENGTH_LONG).show();
             onDestroy();
         }
     }
 
-    void beginListenForData()
-    {
+    void beginListenForData() {
         final Handler handler = new Handler();
 
-        readBuffer = new byte[1024];;  //  수신 버퍼
+        readBuffer = new byte[1024];
+        ;  //  수신 버퍼
         readBufferPositon = 0;        //   버퍼 내 수신 문자 저장 위치
 
         // 문자열 수신 쓰레드
+
         mWorkerThread = new Thread(new Runnable() {
             public void run() {
-                while(!Thread.currentThread().isInterrupted()){
+                while (!Thread.currentThread().isInterrupted()) {
 
                     try {
                         int bytesAvailable = mInputStream.available();    // 수신 데이터 확인
-                        if(bytesAvailable > 0) {                     // 데이터가 수신된 경우
+                        if (bytesAvailable > 0) {                     // 데이터가 수신된 경우
                             byte[] packetBytes = new byte[bytesAvailable];
                             mInputStream.read(packetBytes);
-                            for(int i=0 ; i<bytesAvailable; i++) {
+                            for (int i = 0; i < bytesAvailable; i++) {
                                 byte b = packetBytes[i];
 
-                                if(b == '\n') {  //문자열 끝에 도달 시 들어감
+                                if (b == '\n') {  //문자열 끝에 도달 시 들어감
 
                                     byte[] encodedBytes = new byte[readBufferPositon];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
@@ -142,18 +148,17 @@ public class MyService extends Service {
                                     handler.post(new Runnable() {
 
                                         public void run() {
+                                            AccidentCheck(data);
                                             /////////////////////////////////////
                                             // 수신된 문자열 데이터에 대한 처리 작업
                                         }
                                     });
-                                }
-                                else {
+                                } else {
                                     readBuffer[readBufferPositon++] = b;
                                 }
                             }
                         }
-                    }
-                    catch (IOException ex) {
+                    } catch (IOException ex) {
                         // 데이터 수신 중 오류 발생.
                         onDestroy();//?
                     }
@@ -161,6 +166,13 @@ public class MyService extends Service {
             }
         });
         mWorkerThread.start();
+        //출처: http://hyoin1223.tistory.com/entry/안드로이드-블루투스-프로그래밍 [lionhead]
     }
-    //출처: http://hyoin1223.tistory.com/entry/안드로이드-블루투스-프로그래밍 [lionhead]
+
+    void AccidentCheck(String data){
+        Intent intent = new Intent(this,WarningActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("accdient_data",data);
+        startActivity(intent);
+    }
 }

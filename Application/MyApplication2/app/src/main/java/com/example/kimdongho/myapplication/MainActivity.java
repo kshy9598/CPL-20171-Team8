@@ -1,15 +1,21 @@
 package com.example.kimdongho.myapplication;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -22,7 +28,9 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private Set<BluetoothDevice> mDevices;
     private int mPairedDeviceCount;
+    final int MY_PERMISSION_REQUEST_AUDIO = 36987;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,11 +44,27 @@ public class MainActivity extends AppCompatActivity {
         // 3. Service 를 시작하도록 호출한다
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        checkPermission(); //음성인식 권한 요청
         checkBlueTooth(); //블루투스 체크
 
-        Button b1 = (Button) findViewById(R.id.button1);
-        Button b2 = (Button) findViewById(R.id.button2);
+        ImageView b1 = (ImageView) findViewById(R.id.startButton);
+        //Button b2 = (Button) findViewById(R.id.finishButton);
 
+        b1.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                checkBlueTooth(); //블루투스 체크
+                Log.d("test", "버튼1 클릭");
+                /*
+                Intent intent = new Intent(
+                        getApplicationContext(),//현재제어권자
+                        WarningActivity.class); // 이동할 컴포넌트
+                startActivity(intent); // 서비스 종료
+                */
+            }
+        });
+
+        /*
         b2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // 서비스 종료하기
@@ -49,10 +73,51 @@ public class MainActivity extends AppCompatActivity {
                         getApplicationContext(),//현재제어권자
                         MyService.class); // 이동할 컴포넌트
                 stopService(intent); // 서비스 종료
+                finish();
             }
         });
+        */
     } // end of onCreate
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void checkPermission() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+                // Explain to the user why we need to write the permission.
+                Toast.makeText(this, "Audio permission", Toast.LENGTH_SHORT).show();
+            }
+
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSION_REQUEST_AUDIO);
+
+            // MY_PERMISSION_REQUEST_STORAGE is an
+            // app-defined int constant
+
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSION_REQUEST_AUDIO:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! do the
+                    // calendar task you need to do.
+
+                } else {
+
+                    Log.d("Permission", "Permission always deny");
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                break;
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     void checkBlueTooth() {
         if(mBluetoothAdapter == null) {
             // 장치가 블루투스 지원하지 않는 경우
@@ -67,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 // 블루투스를 활성 상태로 바꾸기 위해 사용자 동의 요첨
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+
 
             }
             else {
@@ -100,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //연결할 디바이스 선택
+    @RequiresApi(api = Build.VERSION_CODES.M)
     void selectDevice() {
         mDevices = mBluetoothAdapter.getBondedDevices();
         mPairedDeviceCount = mDevices.size();
@@ -127,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int item) {
                 if (item == mPairedDeviceCount) {
                     // 연결할 장치를 선택하지 않고 '취소'를 누른 경우
-                    finish();
+                    //finish();
                 } else {
                     // 연결할 장치를 선택한 경우
                     // 선택한 장치와 연결을 시도함
