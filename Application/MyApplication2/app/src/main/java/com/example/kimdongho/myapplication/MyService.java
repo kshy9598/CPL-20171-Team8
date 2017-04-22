@@ -17,6 +17,15 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.example.kimdongho.myapplication.network.NetworkUtil;
+import com.example.kimdongho.myapplication.util.Config;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class MyService extends Service {
 
     private BluetoothAdapter mBluetoothAdapter;
@@ -29,7 +38,12 @@ public class MyService extends Service {
     byte[] readBuffer;
     int readBufferPositon;
 
-    MediaPlayer mp;
+    private NetworkUtil networkUtil;
+    private String serverMsg;
+    private boolean serverAuth;
+
+
+    //MediaPlayer mp;
 
     public MyService() {
     }
@@ -47,8 +61,14 @@ public class MyService extends Service {
         super.onCreate();
         // 서비스에서 가장 먼저 호출됨(최초에 한번만)
         Log.d("test", "서비스의 onCreate");
+        networkUtil = new NetworkUtil(getApplicationContext());
+
+        //name 나중에 수정
+        requestPostLogin();
+        /*
         mp = MediaPlayer.create(this, R.raw.chacha);
         mp.setLooping(false); // 반복재생
+        */
     }
 
     @Override
@@ -59,7 +79,7 @@ public class MyService extends Service {
         connectToSelectedDevices(device_name);
 
         //mp.start(); // 노래 시작
-        //AccidentCheck("name");
+        //AccidentCheck("name"); //Background Test
         //return super.onStartCommand(intent, flags, startId);
         return START_REDELIVER_INTENT;
     }
@@ -71,7 +91,7 @@ public class MyService extends Service {
             mInputStream.close();
             mOutputStream.close();
             mSocket.close();
-            mp.stop(); // 음악 종료
+            //mp.stop(); // 음악 종료
         } catch (Exception e) {
         }
         Log.d("test", "서비스의 onDestroy");
@@ -174,5 +194,62 @@ public class MyService extends Service {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("accdient_data",data);
         startActivity(intent);
+    }
+
+    //Volley Jason Part
+    public void requestPostLogin()
+    {
+        try {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("username", "KimDongHo");
+            jsonObject.put("password", "123123");
+
+            networkUtil.requestServer(Request.Method.POST,
+                    Config.MAIN_URL+Config.POST_SIGNIN,
+                    jsonObject,
+                    networkSuccessListener(),
+                    networkErrorListener());
+
+        } catch (JSONException e)
+        {
+            throw new IllegalStateException("Failed to convert the object to JSON");
+        }
+    }
+
+    private Response.Listener<JSONObject> networkSuccessListener() {
+        return new Response.Listener<JSONObject>() {
+            public void onResponse(JSONObject response) {
+
+                try {
+                    serverMsg = response.getString("message");
+                    serverAuth = response.getBoolean("success");
+                } catch (JSONException e){
+                    e.printStackTrace();
+                    throw new IllegalArgumentException("Failed to parse the String: " + serverMsg);
+                }
+                finally {
+                    Toast.makeText(getApplicationContext(), serverMsg.toString(), Toast.LENGTH_LONG).show();
+                }
+                /*
+                if(serverAuth)
+                {
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    userId = etId.getText().toString();
+                    intent.putExtra("username", userId);
+                    intent.putExtra("auth",serverAuth);
+                    startActivityForResult(intent, 1001);
+                }
+                */
+            }
+        };
+    }
+    private Response.ErrorListener networkErrorListener() {
+        return new Response.ErrorListener() {
+
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        };
     }
 }
