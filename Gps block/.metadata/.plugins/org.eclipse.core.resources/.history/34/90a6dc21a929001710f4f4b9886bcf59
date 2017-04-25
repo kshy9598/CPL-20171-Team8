@@ -1,0 +1,5 @@
+
+public class GPS_BLOCK {
+	public double latitude;
+	public double longitude;
+}
