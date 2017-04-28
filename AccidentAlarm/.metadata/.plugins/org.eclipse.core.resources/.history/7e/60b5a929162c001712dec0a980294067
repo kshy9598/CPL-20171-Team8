@@ -1,0 +1,9 @@
+
+public class Position {
+	public double latitude;
+	public double longitude;
+	
+	public AccidentLocation(){
+		alarm = false;
+	}
+}

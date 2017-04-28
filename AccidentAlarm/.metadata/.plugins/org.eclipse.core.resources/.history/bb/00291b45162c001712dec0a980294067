@@ -1,0 +1,10 @@
+
+public class AccidentLocation extends Position {
+	public double latitude;
+	public double longitude;
+	public boolean alarm;
+	
+	public AccidentLocation(){
+		alarm = false;
+	}
+}

@@ -1,0 +1,10 @@
+
+public class AccidentLocation {
+	public double latitude;
+	public double longitude;
+	public boolean count;
+	
+	public AccidentLocation(){
+		count = 0;
+	}
+}

@@ -1,0 +1,22 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class AccidentAlarm {
+	private static final double ALARM_DISTANCE = 1;
+	
+	private List<AccidentLocation> accidentList;
+	
+	public AccidentAlarm(){
+		accidentList = new ArrayList();
+	}
+	
+	public void getAccidentLocation(){
+		
+	}
+	
+	public double calc_distance(double my_latitude, double my_longitude, double accident_latitude, double accident_longitude){
+		double ret = 0;
+		
+		return ret;
+	}
+}

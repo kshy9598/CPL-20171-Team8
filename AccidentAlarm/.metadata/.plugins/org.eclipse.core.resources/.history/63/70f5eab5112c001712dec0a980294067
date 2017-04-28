@@ -1,0 +1,12 @@
+
+public class AccidentAlarm {
+	
+	public AccidentAlarm(){
+		
+	}
+	
+	public double calc_distance(double my_latitude, double my_longitude, double accident_latitude, double accident_longitude){
+		
+		return ret;
+	}
+}

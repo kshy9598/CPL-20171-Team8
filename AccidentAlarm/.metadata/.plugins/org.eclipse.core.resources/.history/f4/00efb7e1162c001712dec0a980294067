@@ -1,0 +1,15 @@
+
+public class Position {
+	public double latitude;
+	public double longitude;
+	
+	public Position(){	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if(latitude == p.latitude && longitude == p.longitude)
+			return true;
+		else
+			return false;
+	}
+}
