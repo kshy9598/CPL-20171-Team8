@@ -1,0 +1,9 @@
+
+public class AccidentLocation extends Location {
+	public boolean alarm;
+	
+	public AccidentLocation(){
+		super();
+		alarm = false;
+	}
+}
