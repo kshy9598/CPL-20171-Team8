@@ -1,5 +1,0 @@
-# depslib dependency file v1.0
-1493651314 source:/home/pi/CPL-20171-Team8/Accident_detector/main.cpp
-	<iostream>
-	<wiringPi.h>
-

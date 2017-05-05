@@ -24,7 +24,9 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=246;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fmain.cpp;0;4
+FILE_NAME_0=1197;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fmain.cpp;0;4
+FILE_NAME_1=120;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fknock_sensor.h;0;4
+FILE_NAME_2=0;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fknock_sensor.cpp;0;4
 
 [VTE]
 last_dir=/home/pi
@@ -39,4 +41,10 @@ C++FT_00_WD=
 C++FT_01_LB=제작(_B)
 C++FT_01_CM=g++ -Wall -o "%e" "%f" -l wiringPi
 C++FT_01_WD=
-filetypes=C++;
+filetypes=C++;C;
+CFT_00_LB=컴파일(_C)
+CFT_00_CM=g++ -Wall -c "%f"
+CFT_00_WD=
+CFT_01_LB=제작(_B)
+CFT_01_CM=g++ -Wall -o "%e" "%f"
+CFT_01_WD=
