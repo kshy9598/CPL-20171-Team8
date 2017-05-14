@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-class KNOCK_SENSOR {
+class Knock_sensor {
 	private:
 		int value;
 	public:
@@ -9,12 +9,12 @@ class KNOCK_SENSOR {
 		int get_value();
 };
 
-void KNOCK_SENSOR::set_value(char v[])
+void Knock_sensor::set_value(char v[])
 {
 	value = atoi(v);	
 }
 
-int KNOCK_SENSOR::get_value()
+int Knock_sensor::get_value()
 {
 	return value;
 }

@@ -7,6 +7,7 @@
 #include <wiringSerial.h>
 
 #include "knock_sensor.h"
+#include "accelerometer.h"
  
 // Find Serial device on Raspberry with ~ls /dev/tty*
 // ARDUINO_UNO "/dev/ttyACM0"
@@ -14,7 +15,7 @@
 // HARDWARE_UART "/dev/ttyAMA0"
 char DEVICE[]= "/dev/ttyACM0";
 const unsigned long BAUD = 9600;
-const int KNOCK_VALUE = 5;
+const int NUMBER_VALUE = 6;
 const int WAIT = 50000000;
 
 // filedescriptor
@@ -39,8 +40,28 @@ void setup(){
   
   for(int i = 0; i < WAIT; i ++);
 }
+
+int get_number(char newValue[])
+{
+	int index = 0;
+	while(1){
+		newValue[index] = serialGetchar (fd);
+		if(newValue[index] >= '0' && newValue[index] <= '9'){
+			index++;
+			break;
+		}
+	}
+    while(1){
+		newValue[index] = serialGetchar (fd);
+		if(newValue[index] < '0' || newValue[index] > '9'){
+			newValue[index] = '\0';
+			break;
+		}
+		index++;
+	}
+}
  
-void loop(KNOCK_SENSOR knock_sensor){
+void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
   // Pong every 3 seconds
   if(millis()-time>=3000){
     serialPuts (fd, "Pong!\n");
@@ -52,19 +73,29 @@ void loop(KNOCK_SENSOR knock_sensor){
  
   // read signal
   if(serialDataAvail (fd)){
-    char newValue[KNOCK_VALUE] ;
-    int index = 0;
-    while(1){
-		newValue[index] = serialGetchar (fd);
-		if(newValue[index] < '0' || newValue[index] > '9'){
-			newValue[index] = '\0';
-			break;
-		}
-		index++;
-	}
+    char newValue[NUMBER_VALUE] ;
+    int index;
+    
+    index = get_number(newValue);
 	if(index > 0){
 		knock_sensor.set_value(newValue);
 		printf("%d\n", knock_sensor.get_value());
+	}
+	
+	index = get_number(newValue);
+	if(index > 0){
+		accelerometer.set_x(newValue);
+		printf("%d\n", accelerometer.get_x());
+	}
+	index = get_number(newValue);
+	if(index > 0){
+		accelerometer.set_y(newValue);
+		printf("%d\n", accelerometer.get_y());
+	}
+	index = get_number(newValue);
+	if(index > 0){
+		accelerometer.set_z(newValue);
+		printf("%d\n", accelerometer.get_z());
 	}
  
     fflush(stdout);
@@ -73,12 +104,13 @@ void loop(KNOCK_SENSOR knock_sensor){
  
 // main function for normal c++ programs on Raspberry
 int main(int argc, char *argv[]){
-	KNOCK_SENSOR knock_sensor;
+	Knock_sensor knock_sensor;
+	Accelerometer accelerometer;
 	
 	setup();
   
 	while(1) {
-		loop(knock_sensor);
+		loop(knock_sensor, accelerometer);
 	}
 	
   return 0;
