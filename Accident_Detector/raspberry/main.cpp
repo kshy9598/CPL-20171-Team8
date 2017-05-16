@@ -1,26 +1,18 @@
-//include system librarys
-#include <cstdio> //for printf
-#include <errno.h> //error output
+#include "main.h"
 
- //wiring Pi
-#include <wiringPi.h>
-#include <wiringSerial.h>
-
-#include "knock_sensor.h"
-#include "accelerometer.h"
- 
-// Find Serial device on Raspberry with ~ls /dev/tty*
-// ARDUINO_UNO "/dev/ttyACM0"
-// FTDI_PROGRAMMER "/dev/ttyUSB0"
-// HARDWARE_UART "/dev/ttyAMA0"
-char DEVICE[]= "/dev/ttyACM0";
-const unsigned long BAUD = 9600;
-const int NUMBER_VALUE = 6;
-const int WAIT = 50000000;
-
-// filedescriptor
-int fd;
-unsigned long time=0;
+// main function for normal c++ programs on Raspberry
+int main(int argc, char *argv[]){
+	Knock_sensor knock_sensor;
+	Accelerometer accelerometer;
+	
+	setup();
+  
+	while(1) {
+		loop(knock_sensor, accelerometer);
+	}
+	
+  return 0;
+}
  
 void setup(){
   printf("%s \n", "Raspberry Startup!");
@@ -38,7 +30,9 @@ void setup(){
     exit(1); //error
   }
   
-  for(int i = 0; i < WAIT; i ++);
+  setint = 1;
+  sleep(3); //다른 하드웨어 준비 대기
+  state = 1;
 }
 
 int get_number(char newValue[])
@@ -76,12 +70,24 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
     char newValue[NUMBER_VALUE] ;
     int index;
     
-    index = get_number(newValue);
-	if(index > 0){
-		knock_sensor.set_value(newValue);
-		printf("%d\n", knock_sensor.get_value());
+    if(setint){
+		while(setint){
+			index = get_number(newValue);
+			if(index > 0){
+				knock_sensor.set_value(newValue);
+				if(knock_sensor.get_value() >= 1000)
+					setint = 0;
+			}
+		}
 	}
-	
+	else{
+		index = get_number(newValue);
+		if(index > 0){
+			knock_sensor.set_value(newValue);
+			printf("%d\n", knock_sensor.get_value());
+		}
+	}
+    
 	index = get_number(newValue);
 	if(index > 0){
 		accelerometer.set_x(newValue);
@@ -97,21 +103,25 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		accelerometer.set_z(newValue);
 		printf("%d\n", accelerometer.get_z());
 	}
+	
+	if(state == 1)
+		state = 2;
  
     fflush(stdout);
+    
+    if(state == 2 && isAccident(knock_sensor, accelerometer)){
+		state = 0;
+		printf("Accident!\n");
+		system("raspistill -o image.jpg");
+	}
   }
 }
- 
-// main function for normal c++ programs on Raspberry
-int main(int argc, char *argv[]){
-	Knock_sensor knock_sensor;
-	Accelerometer accelerometer;
-	
-	setup();
-  
-	while(1) {
-		loop(knock_sensor, accelerometer);
-	}
-	
-  return 0;
+
+int isAccident(Knock_sensor knock_sensor, Accelerometer accelerometer)
+{
+	//if(knock_sensor.isAccident() && accelerometer.isAccident()) 
+	if(knock_sensor.isAccident()) 
+		return 1;
+		
+	return 0;
 }

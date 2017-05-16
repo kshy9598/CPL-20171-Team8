@@ -24,9 +24,10 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=1922;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fmain.cpp;0;4
+FILE_NAME_0=2556;C++;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fmain.cpp;0;4
 FILE_NAME_1=162;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fknock_sensor.h;0;4
 FILE_NAME_2=462;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Faccelerometer.h;0;4
+FILE_NAME_3=174;C;0;EUTF-8;1;1;0;%2Fhome%2Fpi%2FCPL-20171-Team8%2FAccident_Detector%2Fraspberry%2Fmain.h;0;4
 
 [VTE]
 last_dir=/home/pi
