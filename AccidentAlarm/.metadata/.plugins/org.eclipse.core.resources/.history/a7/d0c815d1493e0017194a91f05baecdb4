@@ -1,0 +1,24 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class Test {
+	public static void main(String[] args){
+		// 클래스 생성
+		AccidentAlarmDetector alarmDetector = new AccidentAlarmDetector();
+		
+		// 사고 위도 경도를 Double형태의 List에 순서대로 넣는다 (위도, 경도, 위도, 경도 ...)
+		List<Double> gpsList = new ArrayList<Double>();
+		gpsList.add(10.0);
+		gpsList.add(10.0);
+		gpsList.add(11.0);
+		gpsList.add(10.0);
+		gpsList.add(20.0);
+		gpsList.add(20.0);
+		
+		alarmDetector.setAccidentLocation(alarmDetector.makeLocationList(gpsList));
+		
+		alarmDetector.set_nowLocation(10.1, 10.1);
+
+		System.out.println(alarmDetector.check_alarm());
+	}
+}

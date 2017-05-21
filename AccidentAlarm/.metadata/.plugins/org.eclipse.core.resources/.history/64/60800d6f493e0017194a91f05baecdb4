@@ -1,0 +1,44 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class Test {
+	public static void main(String[] args){
+		AccidentAlarmDetector alarmDetector = new AccidentAlarmDetector();
+		List<Double> gpsList = new ArrayList<Double>();
+		
+		gpsList.add(10.0);
+		gpsList.add(10.0);
+		gpsList.add(11.0);
+		gpsList.add(10.0);
+		gpsList.add(20.0);
+		gpsList.add(20.0);
+		
+		List<Location> locationList = new ArrayList<Location>();
+		locationList.clear();
+		locationList.add(new Location(10, 10));
+		locationList.add(new Location(11, 10));
+		locationList.add(new Location(20, 20));
+		alarmDetector.setAccidentLocation(alarmDetector.makeLocationList(gpsList));
+		
+		alarmDetector.set_nowLocation(10.1, 10.1);
+
+		System.out.println(arm.check_alarm());
+		System.out.println(arm.getAccidentList());
+		
+		locationList.clear();
+		locationList.add(new Location(10, 10));
+		locationList.add(new Location(11, 10));
+		locationList.add(new Location(20, 20));
+		arm.getAccidentLocation(locationList);
+		System.out.println(arm.check_alarm());
+		System.out.println(arm.getAccidentList());
+		
+		locationList.clear();
+		locationList.add(new Location(11, 10));
+		locationList.add(new Location(20, 20));
+		locationList.add(new Location(10.1, 10.1));
+		arm.getAccidentLocation(locationList);
+		System.out.println(arm.check_alarm());
+		System.out.println(arm.getAccidentList());
+	}
+}
