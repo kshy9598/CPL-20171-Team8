@@ -7,6 +7,17 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.example.kimdongho.myapplication.model.AccidentData;
+import com.example.kimdongho.myapplication.network.NetworkUtil;
+import com.example.kimdongho.myapplication.util.Config;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,8 +35,15 @@ public class WarningActivity extends Activity {
     private AnimationDrawable animDrawable;
     private ImageView warningImageView2;
     private boolean isGetResult;
-    @Override
 
+    //PostNetWork
+    private NetworkUtil networkUtil;
+    private boolean serverAuth;
+
+    //AccidentData
+    private AccidentData accidentData;
+
+    @Override
     public void onBackPressed() {
         sound.autoPause();
         sound.release();
@@ -41,13 +59,19 @@ public class WarningActivity extends Activity {
             if(resultCode == RESULT_OK){
                 boolean pass = data.getExtras().getBoolean("checkSound");
                 if(pass == false){
-                    isAlarmOK = true;
+                    //isAlarmOK = true;
+                    networkUtil = new NetworkUtil(getApplicationContext());
+                    sound.stop(streamId);
+                    requestPostAccInfo();
+                    //Toast.makeText(getApplicationContext(), "신고가 접수 되었습니다.", Toast.LENGTH_LONG).show();
+                    SystemClock.sleep(1000);
+                    finish();
                 }else if(pass == true){
                     sound.stop(streamId);
                     SystemClock.sleep(1000);
+                    Toast.makeText(getApplicationContext(), "신고가 취소 되었습니다.", Toast.LENGTH_LONG).show();
                     Log.d("activity_change", "warning to face tracker in onActivityResult");
                     finish();
-
                 }
             }
         }
@@ -68,8 +92,8 @@ public class WarningActivity extends Activity {
         mainControl = new MainControl();
         mainControl.start();
 
+        accidentData = getIntent().getParcelableExtra("AccidentData");
     }
-
 
     private class MainControl extends Thread {
         private AtomicBoolean isRunning;
@@ -94,6 +118,7 @@ public class WarningActivity extends Activity {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+
                         if(isRunning.get() == true) {
                             Log.d("activity_change", "warning to sound check in main control");
                             Intent soundCheckIntent = new Intent(getApplicationContext(), SoundCheckActivity.class);
@@ -101,9 +126,9 @@ public class WarningActivity extends Activity {
                             startActivityForResult(soundCheckIntent, REQUEST_CODE);
                             isGetResult = false;
                             while (isGetResult == false) {};
+
                         }
                     }
-
                 }
             }
         }
@@ -142,7 +167,6 @@ public class WarningActivity extends Activity {
             }
             sound.stop(streamId);
         }
-
     }
     private class SoundLoadComplete extends Thread {
         boolean loadOK;
@@ -160,5 +184,56 @@ public class WarningActivity extends Activity {
         }
     }
 
+    //Volley Jason Part
+    public void requestPostAccInfo()
+    {
+        try {
+            JSONObject jsonObject = new JSONObject();
+
+            //전송할 사고 정보를 JsonObject에 담는다.
+            jsonObject.put("username",accidentData.getUsername());
+            jsonObject.put("longitude",accidentData.getLogitude());
+            jsonObject.put("latitude",accidentData.getLatitude());
+
+            networkUtil.requestServer(Request.Method.POST,
+                    // Config.MAIN_URL+Config.POST_SIGNIN,
+                    Config.MAIN_URL,
+                    jsonObject,
+                    networkSuccessListener(),
+                    networkErrorListener());
+
+        } catch (JSONException e)
+        {
+            throw new IllegalStateException("Failed to convert the object to JSON");
+        }
+    }
+
+    private Response.Listener<JSONObject> networkSuccessListener() {
+        return new Response.Listener<JSONObject>() {
+            public void onResponse(JSONObject response) {
+                try {
+                    serverAuth = response.getBoolean("success");
+                    if(serverAuth) {
+                        Toast.makeText(getApplicationContext(),"신고가 접수 되었습니다.", Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e){
+                    e.printStackTrace();
+                    //throw new IllegalArgumentException("Failed to parse the String: " + serverMsg);
+                }
+                finally {
+                }
+            }
+        };
+    }
+    private Response.ErrorListener networkErrorListener() {
+        return new Response.ErrorListener() {
+
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        };
+    }
 }
+
+
 
