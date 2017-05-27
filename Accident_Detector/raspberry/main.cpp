@@ -1,4 +1,5 @@
 #include "main.h"
+#include "myBluetooth.h"
 
 // main function for normal c++ programs on Raspberry
 int main(int argc, char *argv[]){
@@ -6,7 +7,8 @@ int main(int argc, char *argv[]){
 	Accelerometer accelerometer;
 	
 	setup();
-  
+    //init_server();
+    
 	while(1) {
 		loop(knock_sensor, accelerometer);
 	}
@@ -112,7 +114,7 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
     if(state == 2 && isAccident(knock_sensor, accelerometer)){
 		state = 0;
 		printf("Accident!\n");
-		system("raspistill -o image.jpg");
+		system("raspistill -q 10 -o image.jpg");
 	}
   }
 }
