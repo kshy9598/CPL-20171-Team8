@@ -8,8 +8,10 @@ import android.net.Uri;
  */
 
 public class Config {
-    public final static String MAIN_URL= "http://ec2-52-42-143-232.us-west-2.compute.amazonaws.com";
+
+    //public final static String MAIN_URL= "http://ec2-52-42-143-232.us-west-2.compute.amazonaws.com";
     //public final static String MAIN_URL = "http://210.118.75.133";
+    public final static String MAIN_URL = "http://52.79.214.37:8080";
 
     public final static String POST_SIGNIN = "/api/user/signin";
     public final static String POST_SIGNUP = "/api/user";

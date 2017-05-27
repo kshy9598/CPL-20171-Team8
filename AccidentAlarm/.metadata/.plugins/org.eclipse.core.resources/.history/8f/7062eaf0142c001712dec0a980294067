@@ -1,6 +1,0 @@
-
-public class AccidentLocation {
-	public double latitude;
-	public double longitude;
-	public AccidentLocation(){};
-}

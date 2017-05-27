@@ -1,49 +1,73 @@
 package com.example.kimdongho.myapplication;
 
+import android.Manifest;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.example.kimdongho.myapplication.model.AccidentData;
+import com.example.kimdongho.myapplication.model.GpsPoint;
 import com.example.kimdongho.myapplication.network.NetworkUtil;
 import com.example.kimdongho.myapplication.util.Config;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MyService extends Service {
-
+    //BlueTooth
+    private static final String TAG = "MyService_GPS_TEST";
     private BluetoothAdapter mBluetoothAdapter;
     private Set<BluetoothDevice> mDevices;
     private int mPairedDeviceCount;
     private BluetoothSocket mSocket;
     private OutputStream mOutputStream;
     private InputStream mInputStream;
+
+    //Thread
     Thread mWorkerThread;
     byte[] readBuffer;
     int readBufferPositon;
 
+    //Network, AccidentGpsPointList
     private NetworkUtil networkUtil;
-    private String serverMsg;
-    private boolean serverAuth;
+    private String username = "KimDongHo";
+    private ArrayList<GpsPoint> GpsPointList;
 
+    //My GpsPoint
+    private LocationManager locationManager;
+    private LocationListener locationListener;
+    private static final int LOCATION_INTERVAL = 0; //1000 = 1second
+    private static final float LOCATION_DISTANCE = 0; // M단위
+    private double longitude;
+    private double latitude;
 
-    //MediaPlayer mp;
+    //AccidentData
+    private AccidentData accidentData = new AccidentData("no",0,0);
 
     public MyService() {
     }
@@ -61,29 +85,25 @@ public class MyService extends Service {
         super.onCreate();
         // 서비스에서 가장 먼저 호출됨(최초에 한번만)
         Log.d("test", "서비스의 onCreate");
-        networkUtil = new NetworkUtil(getApplicationContext());
-
-        //name 나중에 수정
-        requestPostLogin();
-        /*
-        mp = MediaPlayer.create(this, R.raw.chacha);
-        mp.setLooping(false); // 반복재생
-        */
     }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // 서비스가 호출될 때마다 실행
-        Log.d("test", "서비스의 onStartCommand");
+
+        //네트워크 설정
+        networkUtil = new NetworkUtil(getApplicationContext());
+        //GPS 설정
+        settingGps();
+        getGPS();
+
+        Log.e(TAG,""+longitude);
         String device_name = intent.getStringExtra("device_name");
         connectToSelectedDevices(device_name);
 
-        //mp.start(); // 노래 시작
-        //AccidentCheck("name"); //Background Test
         //return super.onStartCommand(intent, flags, startId);
-        return START_REDELIVER_INTENT;
+        //return START_REDELIVER_INTENT;
+        return START_NOT_STICKY;
     }
-
     @Override
     public void onDestroy() {
         try {
@@ -91,10 +111,9 @@ public class MyService extends Service {
             mInputStream.close();
             mOutputStream.close();
             mSocket.close();
-            //mp.stop(); // 음악 종료
+            locationManager.removeUpdates(locationListener);
         } catch (Exception e) {
         }
-        Log.d("test", "서비스의 onDestroy");
         super.onDestroy();
     }
 
@@ -124,32 +143,27 @@ public class MyService extends Service {
             // RFCOMM 채널을 통한 연결
             mSocket.connect();
             // 데이터 송수신을 위한 스트림 열기
-
             mOutputStream = mSocket.getOutputStream();
             mInputStream = mSocket.getInputStream();
-
             // 데이터 수신 준비
             beginListenForData();
         } catch (Exception e) {
             // 블루투스 연결 중 오류 발생
-            Toast.makeText(getApplicationContext(), "Connecft Error", Toast.LENGTH_LONG).show();
-            onDestroy();
+            Toast.makeText(getApplicationContext(), "Connect Error", Toast.LENGTH_LONG).show();
+            //onDestroy();
         }
     }
 
     void beginListenForData() {
         final Handler handler = new Handler();
-
         readBuffer = new byte[1024];
         ;  //  수신 버퍼
         readBufferPositon = 0;        //   버퍼 내 수신 문자 저장 위치
-
+        Toast.makeText(getApplicationContext(), "Connect BlueTooth", Toast.LENGTH_LONG).show();
         // 문자열 수신 쓰레드
-
         mWorkerThread = new Thread(new Runnable() {
             public void run() {
                 while (!Thread.currentThread().isInterrupted()) {
-
                     try {
                         int bytesAvailable = mInputStream.available();    // 수신 데이터 확인
                         if (bytesAvailable > 0) {                     // 데이터가 수신된 경우
@@ -159,7 +173,6 @@ public class MyService extends Service {
                                 byte b = packetBytes[i];
 
                                 if (b == '\n') {  //문자열 끝에 도달 시 들어감
-
                                     byte[] encodedBytes = new byte[readBufferPositon];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
                                     final String data = new String(encodedBytes, "US-ASCII");
@@ -168,7 +181,14 @@ public class MyService extends Service {
                                     handler.post(new Runnable() {
 
                                         public void run() {
-                                            AccidentCheck(data);
+                                            Toast.makeText(getApplicationContext(), "AccidentCheck Start", Toast.LENGTH_LONG).show();
+
+                                            //서버로 전송할 데이터를 AccidentData 객체에 넣는다.
+                                            accidentData.setUsername(username);
+                                            accidentData.setLongitude(longitude);
+                                            accidentData.setLatitude(latitude);
+
+                                            AccidentCheck(accidentData);
                                             /////////////////////////////////////
                                             // 수신된 문자열 데이터에 대한 처리 작업
                                         }
@@ -180,67 +200,114 @@ public class MyService extends Service {
                         }
                     } catch (IOException ex) {
                         // 데이터 수신 중 오류 발생.
-                        onDestroy();//?
+                        onDestroy();
                     }
                 }
             }
         });
         mWorkerThread.start();
-        //출처: http://hyoin1223.tistory.com/entry/안드로이드-블루투스-프로그래밍 [lionhead]
     }
 
-    void AccidentCheck(String data){
+    void AccidentCheck(AccidentData data){
         Intent intent = new Intent(this,WarningActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("accdient_data",data);
+        intent.putExtra("AccdientData",data);
         startActivity(intent);
     }
 
+    public void settingGps(){
+        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            //위치 변경 감지 될 시 서버에 GpsPointList를 Get 형식으로 요청한다.
+            public void onLocationChanged(Location location) {
+                longitude = location.getLongitude();
+                latitude = location.getLatitude();
+                Log.e(TAG, "longitude = " + longitude + "latitude = " + latitude);
+                Toast.makeText(getApplicationContext(),"Respone_Server", Toast.LENGTH_LONG).show();
+                requestGetGps();
+            }
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+    }
+    public void getGPS(){
+        try {
+            locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    LOCATION_INTERVAL,
+                    LOCATION_DISTANCE,
+                    locationListener
+            );
+        }  catch (java.lang.SecurityException ex) {
+            Log.i(TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(TAG, "network provider does not exist, " + ex.getMessage());
+        }
+        try {
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    LOCATION_INTERVAL,
+                    LOCATION_DISTANCE,
+                    locationListener
+            );
+        }  catch (java.lang.SecurityException ex) {
+            Log.i(TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(TAG, "network provider does not exist, " + ex.getMessage());
+        }
+    }
+
     //Volley Jason Part
-    public void requestPostLogin()
+    public void requestGetGps()
+    {
+        Config config = new Config();
+        //String url = config.encodingUrl(Config.MAIN_URL+Config.GET_RESTAURANT, "food_name", food_name);
+        String url = config.encodingUrl(Config.MAIN_URL, "username", username);
+        networkUtil.requestServer(url,
+                null,
+                networkSuccessListener(),
+                networkErrorListener());
+    }
+
+    public void getJsonArray(JSONObject response)
     {
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("username", "KimDongHo");
-            jsonObject.put("password", "123123");
+            JSONArray jsonArray = response.getJSONArray("GpsPointList");
 
-            networkUtil.requestServer(Request.Method.POST,
-                    Config.MAIN_URL+Config.POST_SIGNIN,
-                    jsonObject,
-                    networkSuccessListener(),
-                    networkErrorListener());
-
-        } catch (JSONException e)
-        {
-            throw new IllegalStateException("Failed to convert the object to JSON");
+            //GpsPointList_DataInput
+            int size = jsonArray.length();
+            for(int i = 0; i<size; i++){
+                JSONObject data = jsonArray.getJSONObject(i);
+                GpsPoint point = new GpsPoint(data.getDouble("longitude"),data.getDouble("latitude"));
+                GpsPointList.add(i, point);
+            }
+        } catch (JSONException e){
+            e.printStackTrace();
+            throw new IllegalArgumentException("Failed to parse the String: No" );
         }
     }
 
     private Response.Listener<JSONObject> networkSuccessListener() {
         return new Response.Listener<JSONObject>() {
             public void onResponse(JSONObject response) {
+                //GPSPointList 획득
+                getJsonArray(response);
+                //2차 사고 예방 감지 프로그램에 GpsPointList 넣기
+                //성현이와 미팅 필요
 
-                try {
-                    serverMsg = response.getString("message");
-                    serverAuth = response.getBoolean("success");
-                } catch (JSONException e){
-                    e.printStackTrace();
-                    throw new IllegalArgumentException("Failed to parse the String: " + serverMsg);
-                }
-                finally {
-                    Toast.makeText(getApplicationContext(), serverMsg.toString(), Toast.LENGTH_LONG).show();
-                }
-                /*
-                if(serverAuth)
-                {
-                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    userId = etId.getText().toString();
-                    intent.putExtra("username", userId);
-                    intent.putExtra("auth",serverAuth);
-                    startActivityForResult(intent, 1001);
-                }
-                */
+                //List Clear
+                GpsPointList.clear();
             }
         };
     }

@@ -28,90 +28,77 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private Set<BluetoothDevice> mDevices;
     private int mPairedDeviceCount;
-    final int MY_PERMISSION_REQUEST_AUDIO = 36987;
+
+    final int MY_PERMISSION_REQUEST_AUDIO = 3;
+    final int MY_PERMISSION_REQUEST_GPS = 4;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // 서비스 Service - 안드로이드의 4대 컴포넌트 중 하나
-        //     화면이 없이 동작함
-        // 보통 Activity 에서 호출되어 시작함
-
-        // 1. 사용할 Service (*.java)를 만든다
-        // 2. AndroidManifest.xml 에 Service를 등록한다
-        // 3. Service 를 시작하도록 호출한다
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         checkPermission(); //음성인식 권한 요청
         checkBlueTooth(); //블루투스 체크
 
+
+
         ImageView b1 = (ImageView) findViewById(R.id.startButton);
-        //Button b2 = (Button) findViewById(R.id.finishButton);
 
         b1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
                 checkBlueTooth(); //블루투스 체크
-                Log.d("test", "버튼1 클릭");
-                /*
-                Intent intent = new Intent(
-                        getApplicationContext(),//현재제어권자
-                        WarningActivity.class); // 이동할 컴포넌트
-                startActivity(intent); // 서비스 종료
-                */
             }
         });
 
-        /*
-        b2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // 서비스 종료하기
-                Log.d("test", "액티비티-서비스 종료버튼클릭");
-                Intent intent = new Intent(
-                        getApplicationContext(),//현재제어권자
-                        MyService.class); // 이동할 컴포넌트
-                stopService(intent); // 서비스 종료
-                finish();
-            }
-        });
-        */
     } // end of onCreate
-
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void checkPermission() {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Explain to the user why we need to write the permission.
+                Toast.makeText(this, "Need GPS permission", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSION_REQUEST_GPS);
+        }
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
             if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
                 // Explain to the user why we need to write the permission.
-                Toast.makeText(this, "Audio permission", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Need audio permission", Toast.LENGTH_SHORT).show();
             }
-
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, MY_PERMISSION_REQUEST_AUDIO);
-
-            // MY_PERMISSION_REQUEST_STORAGE is an
-            // app-defined int constant
-
         }
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
+            case MY_PERMISSION_REQUEST_GPS:
+                for (int i = 0; i < permissions.length; i++) {
+                    String permission = permissions[i];
+                    int grantResult = grantResults[i];
+                    if (permission.equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                        if(grantResult == PackageManager.PERMISSION_GRANTED) {
+                            Toast.makeText(this, "Get permission", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("Permission", "Permission always deny");
+                        }
+                    }
+                }
+                break;
             case MY_PERMISSION_REQUEST_AUDIO:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! do the
-                    // calendar task you need to do.
-
-                } else {
-
-                    Log.d("Permission", "Permission always deny");
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                for (int i = 0; i < permissions.length; i++) {
+                    String permission = permissions[i];
+                    int grantResult = grantResults[i];
+                    if (permission.equals(Manifest.permission.RECORD_AUDIO)) {
+                        if(grantResult == PackageManager.PERMISSION_GRANTED) {
+                            Toast.makeText(this, "Get Audio permission", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Log.d("Permission", "Permission always deny");
+                        }
+                    }
                 }
                 break;
         }
@@ -132,24 +119,23 @@ public class MainActivity extends AppCompatActivity {
                 // 블루투스를 활성 상태로 바꾸기 위해 사용자 동의 요첨
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-
-
             }
             else {
                 // 블루투스를 지원하며 활성 상태인 경우
                 // 페어링된 기기 목록을 보여주고 연결할 장치를 선택.
-                Toast.makeText(getApplicationContext(),"Already on", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(),"Already on bluetooth", Toast.LENGTH_SHORT).show();
                 selectDevice();
             }
 
         }
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch(requestCode) {
             case REQUEST_ENABLE_BT:
                 if(resultCode == RESULT_OK) {
                     // 블루투스가 활성 상태로 변경됨
-                    Toast.makeText(getApplicationContext(),"Turned on",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),"Turned on bluetooth",Toast.LENGTH_SHORT).show();
                     selectDevice();
                 }
 
@@ -164,7 +150,6 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
     //연결할 디바이스 선택
     @RequiresApi(api = Build.VERSION_CODES.M)
     void selectDevice() {
@@ -172,8 +157,10 @@ public class MainActivity extends AppCompatActivity {
         mPairedDeviceCount = mDevices.size();
 
         if(mPairedDeviceCount == 0 ) {
+            Toast.makeText(getApplicationContext(),"Not Pairing",Toast.LENGTH_SHORT).show();
             //  페어링 된 장치가 없는 경우
-            finish();    // 어플리케이션 종료
+            //5월 24일자 확인
+            //finish();    // 어플리케이션 종료
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -206,10 +193,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
         builder.setCancelable(false);    // 뒤로 가기 버튼 사용 금지
         AlertDialog alert = builder.create();
         alert.show();
     }
-
 } // end of class

@@ -35,6 +35,8 @@ public class SoundCheckActivity extends Activity {
         editText.setFocusableInTouchMode(false);
         progressBar = (ProgressBar)findViewById(R.id.progressBar);
         progressBar.setVisibility(ProgressBar.GONE);
+
+
         mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.applesound);
         mRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         intent = new Intent(RecognizerIntent.EXTRA_PREFER_OFFLINE);
@@ -105,7 +107,6 @@ public class SoundCheckActivity extends Activity {
             // TODO Auto-generated method stub
 
         }
-
         @Override
         public void onError(int error) {
 

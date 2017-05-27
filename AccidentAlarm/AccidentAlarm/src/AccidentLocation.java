@@ -12,4 +12,12 @@ public class AccidentLocation extends Location {
 		super.copyLocation(loc);
 		alarm = false;
 	}
+
+	public boolean isAlarm() {
+		return alarm;
+	}
+
+	public void setAlarm(boolean alarm) {
+		this.alarm = alarm;
+	}
 }
