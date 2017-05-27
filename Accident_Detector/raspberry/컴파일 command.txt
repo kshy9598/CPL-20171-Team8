@@ -1,0 +1,2 @@
+c : g++ -Wall -c "%f" -l wiringPi -lbluetooth
+b : g++ -Wall -o "%e" "%f" -l wiringPi -lbluetooth
