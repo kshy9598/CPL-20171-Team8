@@ -22,6 +22,7 @@ int fd;
 unsigned long time=0;
 int setint;
 int state;
+int client;
 
 void setup();
 int get_number(char newValue[]);

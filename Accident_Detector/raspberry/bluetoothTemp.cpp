@@ -1,4 +1,5 @@
 	#include <stdio.h>
+	#include <stdlib.h>
 	#include <unistd.h>
 	#include <sys/socket.h>
 	#include <bluetooth/bluetooth.h>
@@ -115,7 +116,7 @@
 
 		// cleanup
 		sdp_data_free(channel);
-		*(l2cap_list, 0);
+		//*(l2cap_list, 0);
 		sdp_list_free(rfcomm_list, 0);
 		sdp_list_free(root_list, 0);
 		sdp_list_free(access_proto_list, 0);

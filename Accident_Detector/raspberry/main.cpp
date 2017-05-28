@@ -7,7 +7,7 @@ int main(int argc, char *argv[]){
 	Accelerometer accelerometer;
 	
 	setup();
-    //init_server();
+    client = init_server();
     
 	while(1) {
 		loop(knock_sensor, accelerometer);
@@ -76,6 +76,10 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		while(setint){
 			index = get_number(newValue);
 			if(index > 0){
+				if(state < 15){
+					state++;
+					continue;
+				}
 				knock_sensor.set_value(newValue);
 				if(knock_sensor.get_value() >= 1000)
 					setint = 0;
@@ -86,35 +90,35 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		index = get_number(newValue);
 		if(index > 0){
 			knock_sensor.set_value(newValue);
-			printf("%d\n", knock_sensor.get_value());
+			//printf("%d\n", knock_sensor.get_value());
 		}
 	}
     
 	index = get_number(newValue);
 	if(index > 0){
 		accelerometer.set_x(newValue);
-		printf("%d\n", accelerometer.get_x());
+		//printf("%d\n", accelerometer.get_x());
 	}
 	index = get_number(newValue);
 	if(index > 0){
 		accelerometer.set_y(newValue);
-		printf("%d\n", accelerometer.get_y());
+		//printf("%d\n", accelerometer.get_y());
 	}
 	index = get_number(newValue);
 	if(index > 0){
 		accelerometer.set_z(newValue);
-		printf("%d\n", accelerometer.get_z());
+		//printf("%d\n", accelerometer.get_z());
 	}
-	
-	if(state == 1)
-		state = 2;
  
     fflush(stdout);
     
-    if(state == 2 && isAccident(knock_sensor, accelerometer)){
+    if(state == 15 && isAccident(knock_sensor, accelerometer)){
 		state = 0;
 		printf("Accident!\n");
 		system("raspistill -q 10 -o image.jpg");
+		
+		char msg[] = "asdf";
+		write_server(client, msg);
 	}
   }
 }
