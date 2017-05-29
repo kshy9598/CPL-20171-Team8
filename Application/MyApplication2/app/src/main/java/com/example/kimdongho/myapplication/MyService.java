@@ -167,12 +167,13 @@ public class MyService extends Service {
                     try {
                         int bytesAvailable = mInputStream.available();    // 수신 데이터 확인
                         if (bytesAvailable > 0) {                     // 데이터가 수신된 경우
+                            Log.v("b", "b");
                             byte[] packetBytes = new byte[bytesAvailable];
                             mInputStream.read(packetBytes);
                             for (int i = 0; i < bytesAvailable; i++) {
                                 byte b = packetBytes[i];
 
-                                if (b == '\n') {  //문자열 끝에 도달 시 들어감
+                                if (b == '\0') {  //문자열 끝에 도달 시 들어감
                                     byte[] encodedBytes = new byte[readBufferPositon];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
                                     final String data = new String(encodedBytes, "US-ASCII");
