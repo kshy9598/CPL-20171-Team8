@@ -38,6 +38,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.String;
+import java.io.FileOutputStream;
+
 public class MyService extends Service {
     //BlueTooth
     private static final String TAG = "MyService_GPS_TEST";
@@ -47,6 +50,8 @@ public class MyService extends Service {
     private BluetoothSocket mSocket;
     private OutputStream mOutputStream;
     private InputStream mInputStream;
+
+    private int bluetoothState;
 
     //Thread
     Thread mWorkerThread;
@@ -85,6 +90,7 @@ public class MyService extends Service {
         super.onCreate();
         // 서비스에서 가장 먼저 호출됨(최초에 한번만)
         Log.d("test", "서비스의 onCreate");
+        bluetoothState = 0;
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -154,50 +160,86 @@ public class MyService extends Service {
         }
     }
 
+    void receiveImageFile(InputStream is){
+        String filename = "/home/CARS/accidentImage.jpg";
+
+        try {
+            Log.v("rFile1", "start");
+            FileOutputStream fos = new FileOutputStream(filename);
+            Log.v("rFile3", "mid2");
+            byte[] buffer = new byte[8192];
+            Log.v("rFile4", "mid3");
+            int readBytes;
+
+            Log.v("rFile5", "mid4");
+            while((readBytes = is.read(buffer)) > 0){
+                fos.write(buffer, 0, readBytes);
+            }
+
+            Log.v("rFile10", "end");
+            fos.close();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
     void beginListenForData() {
         final Handler handler = new Handler();
         readBuffer = new byte[1024];
         ;  //  수신 버퍼
+
         readBufferPositon = 0;        //   버퍼 내 수신 문자 저장 위치
         Toast.makeText(getApplicationContext(), "Connect BlueTooth", Toast.LENGTH_LONG).show();
         // 문자열 수신 쓰레드
         mWorkerThread = new Thread(new Runnable() {
             public void run() {
+                FileOutputStream fos = null;
+                String filename = "/data/data/com.example.kimdongho.myapplication/accidentImage.jpg";
+                byte[] packetBytes = new byte[8192];
+
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        int bytesAvailable = mInputStream.available();    // 수신 데이터 확인
-                        if (bytesAvailable > 0) {                     // 데이터가 수신된 경우
-                            Log.v("b", "b");
-                            byte[] packetBytes = new byte[bytesAvailable];
-                            mInputStream.read(packetBytes);
-                            for (int i = 0; i < bytesAvailable; i++) {
-                                byte b = packetBytes[i];
+                        int bytesAvailable = mInputStream.read(packetBytes);    // 수신 데이터 확인
+                        Log.v("rFile", Integer.toString(bluetoothState) + " " + Integer.toString(bytesAvailable));
+                        StringBuffer sb = new StringBuffer();
+                        sb.append(new String(packetBytes, 0, bytesAvailable));
+                        String tempStr = sb.toString();
+                        if(tempStr.equals("accident") == true){
+                            bluetoothState = 2;
+                        }
 
-                                if (b == '\0') {  //문자열 끝에 도달 시 들어감
-                                    byte[] encodedBytes = new byte[readBufferPositon];
-                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                    final String data = new String(encodedBytes, "US-ASCII");
-                                    readBufferPositon = 0;
+                        if (bytesAvailable > 0 && bluetoothState == 0){
+                            fos = new FileOutputStream(filename);
+                            bluetoothState = 1;
+                            Log.v("rFile1", "start");
+                        }
+                        if (bytesAvailable > 0 && bluetoothState == 1) {                     // 데이터가 수신된 경우
+                            //int bytesRead = mInputStream.read(packetBytes);
+                            fos.write(packetBytes, 0, bytesAvailable);
+                            Log.v("rFile3", "mid");
+                        }
+                        if(bluetoothState == 2){
+                            Log.v("rFile10", "end");
+                            fos.close();
+                            handler.post(new Runnable() {
 
-                                    handler.post(new Runnable() {
+                                public void run() {
+                                    //receiveImageFile(mInputStream);
 
-                                        public void run() {
-                                            Toast.makeText(getApplicationContext(), "AccidentCheck Start", Toast.LENGTH_LONG).show();
+                                    Toast.makeText(getApplicationContext(), "AccidentCheck Start", Toast.LENGTH_LONG).show();
 
-                                            //서버로 전송할 데이터를 AccidentData 객체에 넣는다.
-                                            accidentData.setUsername(username);
-                                            accidentData.setLongitude(longitude);
-                                            accidentData.setLatitude(latitude);
+                                    //서버로 전송할 데이터를 AccidentData 객체에 넣는다.
+                                    accidentData.setUsername(username);
+                                    accidentData.setLongitude(longitude);
+                                    accidentData.setLatitude(latitude);
 
-                                            AccidentCheck(accidentData);
-                                            /////////////////////////////////////
-                                            // 수신된 문자열 데이터에 대한 처리 작업
-                                        }
-                                    });
-                                } else {
-                                    readBuffer[readBufferPositon++] = b;
+                                    AccidentCheck(accidentData);
+                                    /////////////////////////////////////
+                                    // 수신된 문자열 데이터에 대한 처리 작업
                                 }
-                            }
+                            });
+                            bluetoothState = 0;
                         }
                     } catch (IOException ex) {
                         // 데이터 수신 중 오류 발생.
