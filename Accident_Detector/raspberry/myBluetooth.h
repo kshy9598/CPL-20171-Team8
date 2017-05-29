@@ -223,3 +223,23 @@ void write_server(int client, char *message) {
         printf("sent [%s] %d\n", messageArr, bytes_sent);
     }
 }
+
+void send_file_server(int client, const char *fileName)
+{
+	char c;
+	
+	FILE *serverFP = fdopen(client, "wb");
+	FILE *fp = fopen(fileName, "rb");
+	
+	printf("start send image file\n");
+	
+	c=fgetc(fp);
+	while(!feof(fp)){
+		fputc(c, serverFP);
+		c=fgetc(fp);
+	}
+	
+	printf("complete send image file\n");
+	
+	fclose(fp);
+}

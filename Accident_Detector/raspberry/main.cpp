@@ -116,8 +116,12 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		state = 0;
 		printf("Accident!\n");
 		system("raspistill -q 10 -o image.jpg");
-		
-		char msg[] = "asdf";
+		 
+		char msg[] = "accident";
+		//write_server(client, msg);
+		//sleep(1);
+		send_file_server(client, IMAGEFILE);
+		sleep(1);
 		write_server(client, msg);
 	}
   }

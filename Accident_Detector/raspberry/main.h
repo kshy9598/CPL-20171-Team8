@@ -16,6 +16,7 @@
 char DEVICE[]= "/dev/ttyACM0";
 const unsigned long BAUD = 9600;
 const int NUMBER_VALUE = 6;
+const char IMAGEFILE[] = "/home/pi/CPL-20171-Team8/Accident_Detector/raspberry/image.jpg";
 
 // filedescriptor
 int fd;
