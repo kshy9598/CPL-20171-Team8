@@ -66,7 +66,7 @@ public class MyService extends Service {
     //My GpsPoint
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private static final int LOCATION_INTERVAL = 0; //1000 = 1second
+    private static final int LOCATION_INTERVAL = 1000; //1000 = 1second
     private static final float LOCATION_DISTANCE = 0; // M단위
     private double longitude;
     private double latitude;
@@ -96,13 +96,16 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         // 서비스가 호출될 때마다 실행
 
+        //GpsPointList 생성
+        GpsPointList = new ArrayList<>();
+
         //네트워크 설정
         networkUtil = new NetworkUtil(getApplicationContext());
+
         //GPS 설정
         settingGps();
         getGPS();
 
-        Log.e(TAG,""+longitude);
         String device_name = intent.getStringExtra("device_name");
         connectToSelectedDevices(device_name);
 
@@ -160,30 +163,6 @@ public class MyService extends Service {
         }
     }
 
-    void receiveImageFile(InputStream is){
-        String filename = "/home/CARS/accidentImage.jpg";
-
-        try {
-            Log.v("rFile1", "start");
-            FileOutputStream fos = new FileOutputStream(filename);
-            Log.v("rFile3", "mid2");
-            byte[] buffer = new byte[8192];
-            Log.v("rFile4", "mid3");
-            int readBytes;
-
-            Log.v("rFile5", "mid4");
-            while((readBytes = is.read(buffer)) > 0){
-                fos.write(buffer, 0, readBytes);
-            }
-
-            Log.v("rFile10", "end");
-            fos.close();
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
     void beginListenForData() {
         final Handler handler = new Handler();
         readBuffer = new byte[1024];
@@ -233,6 +212,7 @@ public class MyService extends Service {
                                     accidentData.setUsername(username);
                                     accidentData.setLongitude(longitude);
                                     accidentData.setLatitude(latitude);
+                                    Log.e("Test~~~~~~~~~~", accidentData.getUsername());
 
                                     AccidentCheck(accidentData);
                                     /////////////////////////////////////
@@ -254,7 +234,7 @@ public class MyService extends Service {
     void AccidentCheck(AccidentData data){
         Intent intent = new Intent(this,WarningActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("AccdientData",data);
+        intent.putExtra("AccidentData",data);
         startActivity(intent);
     }
 
@@ -267,7 +247,7 @@ public class MyService extends Service {
                 longitude = location.getLongitude();
                 latitude = location.getLatitude();
                 Log.e(TAG, "longitude = " + longitude + "latitude = " + latitude);
-                Toast.makeText(getApplicationContext(),"Respone_Server", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(),"Respone_Server", Toast.LENGTH_SHORT).show();
                 requestGetGps();
             }
             @Override

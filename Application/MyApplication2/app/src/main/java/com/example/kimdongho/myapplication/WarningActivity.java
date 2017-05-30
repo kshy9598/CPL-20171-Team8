@@ -93,6 +93,7 @@ public class WarningActivity extends Activity {
         mainControl.start();
 
         accidentData = getIntent().getParcelableExtra("AccidentData");
+        Log.e("-------------------", accidentData.getUsername());
     }
 
     private class MainControl extends Thread {
