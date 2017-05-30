@@ -9,18 +9,24 @@ import android.os.Parcelable;
 
 public class AccidentData implements Parcelable {
     private String username;
+    private String phone;
+    private String photo;
     private double longitude;
     private double latitude;
 
-    public AccidentData(String username, double longitude, double latitude)
+    public AccidentData(String username,String phone,String photo, double longitude, double latitude)
     {
         this.username = username;
+        this.phone = phone;
+        this.photo = photo;
         this.longitude = longitude;
         this.latitude = latitude;
     }
 
     protected AccidentData(Parcel in) {
         username = in.readString();
+        phone = in.readString();
+        photo = in.readString();
         longitude = in.readDouble();
         latitude = in.readDouble();
     }
@@ -43,6 +49,8 @@ public class AccidentData implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(username);
+        dest.writeString(phone);
+        dest.writeString(photo);
         dest.writeDouble(longitude);
         dest.writeDouble(latitude);
     }
@@ -53,6 +61,14 @@ public class AccidentData implements Parcelable {
     public String getUsername() {
         return username;
     }
+    
+    public void setPhone(String phone){this.phone = phone;}
+    
+    public String getPhone() { return phone; }
+
+    public void setPhoto(String photo){this.photo = photo;}
+
+    public String getPhoto() { return photo; }
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;

@@ -1,10 +1,13 @@
 package com.example.kimdongho.myapplication;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -19,6 +22,7 @@ import com.example.kimdongho.myapplication.util.Config;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WarningActivity extends Activity {
@@ -63,7 +67,6 @@ public class WarningActivity extends Activity {
                     networkUtil = new NetworkUtil(getApplicationContext());
                     sound.stop(streamId);
                     requestPostAccInfo();
-                    //Toast.makeText(getApplicationContext(), "신고가 접수 되었습니다.", Toast.LENGTH_LONG).show();
                     SystemClock.sleep(1000);
                     finish();
                 }else if(pass == true){
@@ -185,14 +188,29 @@ public class WarningActivity extends Activity {
         }
     }
 
+    //Image to String
+    private String getStringFromBitmap(Bitmap bitmapPicture) {
+        String encodedImage;
+        ByteArrayOutputStream byteArrayBitmapStream = new ByteArrayOutputStream();
+        bitmapPicture.compress(Bitmap.CompressFormat.PNG, 100, byteArrayBitmapStream);
+        byte[] b = byteArrayBitmapStream.toByteArray();
+        encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+        return encodedImage;
+    }
+
     //Volley Jason Part
     public void requestPostAccInfo()
     {
         try {
             JSONObject jsonObject = new JSONObject();
+            //Bitmap accidentImage = BitmapFactory.decodeFile(accidentData.getPhoto());
 
             //전송할 사고 정보를 JsonObject에 담는다.
             jsonObject.put("username",accidentData.getUsername());
+            jsonObject.put("phone",accidentData.getPhone());
+
+            Toast.makeText(getApplicationContext(),"이미지 정보를 담고 있습니다", Toast.LENGTH_SHORT).show();
+            jsonObject.put("photo",getStringFromBitmap(BitmapFactory.decodeFile(accidentData.getPhoto())));
             jsonObject.put("longitude",accidentData.getLogitude());
             jsonObject.put("latitude",accidentData.getLatitude());
 

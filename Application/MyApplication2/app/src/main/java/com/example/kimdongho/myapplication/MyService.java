@@ -60,7 +60,9 @@ public class MyService extends Service {
 
     //Network, AccidentGpsPointList
     private NetworkUtil networkUtil;
+    private String imagefile="/data/data/com.example.kimdongho.myapplication/accidentImage.jpg";
     private String username = "KimDongHo";
+    private String phone ="01072723768";
     private ArrayList<GpsPoint> GpsPointList;
 
     //My GpsPoint
@@ -72,7 +74,7 @@ public class MyService extends Service {
     private double latitude;
 
     //AccidentData
-    private AccidentData accidentData = new AccidentData("no",0,0);
+    private AccidentData accidentData = new AccidentData("false","false","false",0,0);
 
     public MyService() {
     }
@@ -174,7 +176,7 @@ public class MyService extends Service {
         mWorkerThread = new Thread(new Runnable() {
             public void run() {
                 FileOutputStream fos = null;
-                String filename = "/data/data/com.example.kimdongho.myapplication/accidentImage.jpg";
+                String filename = imagefile;
                 byte[] packetBytes = new byte[8192];
 
                 while (!Thread.currentThread().isInterrupted()) {
@@ -204,12 +206,12 @@ public class MyService extends Service {
                             handler.post(new Runnable() {
 
                                 public void run() {
-                                    //receiveImageFile(mInputStream);
-
                                     Toast.makeText(getApplicationContext(), "AccidentCheck Start", Toast.LENGTH_LONG).show();
 
                                     //서버로 전송할 데이터를 AccidentData 객체에 넣는다.
                                     accidentData.setUsername(username);
+                                    accidentData.setPhone(phone);
+                                    accidentData.setPhoto(imagefile);
                                     accidentData.setLongitude(longitude);
                                     accidentData.setLatitude(latitude);
                                     Log.e("Test~~~~~~~~~~", accidentData.getUsername());
