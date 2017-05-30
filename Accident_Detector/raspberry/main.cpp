@@ -90,7 +90,7 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		index = get_number(newValue);
 		if(index > 0){
 			knock_sensor.set_value(newValue);
-			//printf("%d\n", knock_sensor.get_value());
+			printf("%d\n", knock_sensor.get_value());
 		}
 	}
     
@@ -113,7 +113,8 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
     fflush(stdout);
     
     if(state == 15 && isAccident(knock_sensor, accelerometer)){
-		state = 0;
+		state = -1000;
+		setint = 1;
 		printf("Accident!\n");
 		system("raspistill -q 10 -o image.jpg");
 		 
