@@ -1,14 +1,19 @@
 package com.example.kimdongho.myapplication;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -26,7 +31,6 @@ import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WarningActivity extends Activity {
-
     public static final int REQUEST_CODE  = 1001;
     private SoundPool sound;
     public int soundId;
@@ -47,6 +51,29 @@ public class WarningActivity extends Activity {
 
     //AccidentData
     private AccidentData accidentData;
+
+    private MyService myService;
+    private Intent Service;
+
+    //서비스 커넥션 선언.
+    private ServiceConnection mConnection = new ServiceConnection() {
+        // Called when the connection with the service is established
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            MyService.MainServiceBinder binder = (MyService.MainServiceBinder) service;
+            myService = binder.getService(); //서비스 받아옴
+            //myService.registerCallback(mCallback); //콜백 등록
+        }
+        // Called when the connection with the service disconnects unexpectedly
+        public void onServiceDisconnected(ComponentName className) {
+            myService = null;
+        }
+    };
+
+    //서비스 시작.
+    public void startServiceMethod(Intent Service){
+        Service = new Intent(this, MyService.class);
+        bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
+    }
 
     @Override
     public void onBackPressed() {
@@ -76,6 +103,7 @@ public class WarningActivity extends Activity {
                     Toast.makeText(getApplicationContext(), "신고가 취소 되었습니다.", Toast.LENGTH_LONG).show();
                     Log.d("activity_change", "warning to face tracker in onActivityResult");
                     finish();
+
                 }
             }
         }
@@ -91,11 +119,13 @@ public class WarningActivity extends Activity {
         isGetResult = false;
         streamId = -1;
 
+        /////5월 31일자
         accidentData = getIntent().getParcelableExtra("AccidentData");
+        startServiceMethod(Service);
 
         sound = new SoundPool(1, 3, 0);// maxStreams, streamType, srcQuality
         if(accidentData.getChecksound()==0) {
-            soundId = sound.load(this, R.raw.chacha, 1);
+            soundId = sound.load(this, R.raw.alarm6, 1);
             limit_sound = 10;
         }
         else {
@@ -157,6 +187,10 @@ public class WarningActivity extends Activity {
     protected void onDestroy() {
         sound.autoPause();
         sound.release();
+
+        //Service Synchronized
+        myService.myServiceFunc();
+        unbindService(mConnection);
         super.onDestroy();
     }
 

@@ -42,7 +42,13 @@ public class MainActivity extends AppCompatActivity {
         checkPermission(); //음성인식 권한 요청
         checkBlueTooth(); //블루투스 체크
 
-
+        /*
+        //Test 5월 31일
+        Intent intent = new Intent(
+                getApplicationContext(),//현재제어권자
+                MyService.class); // 이동할 컴포넌트
+        startService(intent); // 서비스 시작
+        */
 
         ImageView b1 = (ImageView) findViewById(R.id.startButton);
 

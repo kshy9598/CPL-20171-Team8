@@ -77,6 +77,7 @@ public class AccidentAlarmDetector {
 
     // 알람 여부를 측정한 함수
     public boolean check_alarm(){
+        boolean realAccident = false;
         for(int i = 0; i < accidentList.size(); i++){
             if(accidentList.get(i).isAlarm() == true)
                 continue;
@@ -96,12 +97,14 @@ public class AccidentAlarmDetector {
 
                 if(check == -1){
                     accidentList.get(i).setAlarm(true);
-                    return true;
+                    realAccident = true;
                 }
             }
         }
-
-        return false;
+        if(realAccident)
+            return true;
+        else
+            return false;
     }
 }
 

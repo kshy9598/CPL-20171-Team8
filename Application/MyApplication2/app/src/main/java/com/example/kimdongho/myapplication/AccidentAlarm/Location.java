@@ -35,7 +35,7 @@ public class Location {
     public boolean equals(Object obj){
         Location p = (Location)obj;
 
-        if(latitude == p.latitude && longitude == p.longitude)
+        if(latitude - p.latitude < 0.000000001 && longitude - p.longitude < 0.000000001)
             return true;
         else
             return false;

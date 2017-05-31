@@ -12,6 +12,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -63,19 +64,19 @@ public class MyService extends Service {
     //Network, Post AccidentInfo
     private NetworkUtil networkUtil;
     private String imagefile="/data/data/com.example.kimdongho.myapplication/accidentImage.jpg";
-    private String username = "KimDongHo";
-    private String phone ="01072723768";
+    private String username = "KimSH";
+    private String phone ="01043231782";
 
     //Get AccidentInfo
     private ArrayList<GpsPoint> GpsPointList;
     private AccidentAlarmDetector alarmDetector;
-    private boolean runCheck = false;
+    public boolean runCheck = false;
 
     //My GpsPoint
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private static final int LOCATION_INTERVAL = 1000; //1000 = 1second
-    private static final float LOCATION_DISTANCE = 1; // M단위
+    private static final int LOCATION_INTERVAL = 2000; //1000 = 1second
+    private static final float LOCATION_DISTANCE = 5; // M단위
     private double longitude;
     private double latitude;
 
@@ -87,12 +88,24 @@ public class MyService extends Service {
     public MyService() {
     }
 
+    //////////////////////////////////
+    //서비스 바인더 내부 클래스 선언
+    public class MainServiceBinder extends Binder{
+        MyService getService() {
+            return MyService.this;
+        }
+    }
+    private final IBinder mBinder = new MainServiceBinder();
+
     @Override
     public IBinder onBind(Intent intent) {
         // Service 객체와 (화면단 Activity 사이에서)
         // 통신(데이터를 주고받을) 때 사용하는 메서드
         // 데이터를 전달할 필요가 없으면 return null;
-        return null;
+        return mBinder;
+    }
+    public void myServiceFunc(){
+        runCheck = false;
     }
 
     @Override
@@ -117,6 +130,7 @@ public class MyService extends Service {
         settingGps();
         getGPS();
 
+        //5월 31일자 Test
         String device_name = intent.getStringExtra("device_name");
         connectToSelectedDevices(device_name);
 
@@ -280,12 +294,8 @@ public class MyService extends Service {
                     NetWorkTest++;
                 }
                 */
-
                 Toast.makeText(getApplicationContext(),"Respone_Server", Toast.LENGTH_SHORT).show();
-                if(!runCheck) {
-                    requestGetGps();
-                }
-
+                requestGetGps();
             }
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -368,8 +378,15 @@ public class MyService extends Service {
 
                 alarmDetector.setAccidentLocation(alarmDetector.makeLocationList(GpsPointList));
                 alarmDetector.set_nowLocation(latitude,longitude);
-                if(alarmDetector.check_alarm()){
+
+                if(alarmDetector.check_alarm() && !runCheck){
+                    boolean tmp = alarmDetector.check_alarm();
+                    Log.e("~~!!!!!!!!!","result= "+ tmp);
+
                     accidentData.setChecksound(0);
+                    runCheck=true;
+
+                    Log.e("~~runcheck~~","result= "+ runCheck);
                     AccidentCheck(accidentData);
                 }
 
