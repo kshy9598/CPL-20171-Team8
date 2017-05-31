@@ -29,6 +29,7 @@ import java.util.UUID;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.example.kimdongho.myapplication.AccidentAlarm.AccidentAlarmDetector;
 import com.example.kimdongho.myapplication.model.AccidentData;
 import com.example.kimdongho.myapplication.model.GpsPoint;
 import com.example.kimdongho.myapplication.network.NetworkUtil;
@@ -40,6 +41,7 @@ import org.json.JSONObject;
 
 import java.lang.String;
 import java.io.FileOutputStream;
+
 
 public class MyService extends Service {
     //BlueTooth
@@ -58,23 +60,29 @@ public class MyService extends Service {
     byte[] readBuffer;
     int readBufferPositon;
 
-    //Network, AccidentGpsPointList
+    //Network, Post AccidentInfo
     private NetworkUtil networkUtil;
     private String imagefile="/data/data/com.example.kimdongho.myapplication/accidentImage.jpg";
     private String username = "KimDongHo";
     private String phone ="01072723768";
+
+    //Get AccidentInfo
     private ArrayList<GpsPoint> GpsPointList;
+    private AccidentAlarmDetector alarmDetector;
+    private boolean runCheck = false;
 
     //My GpsPoint
     private LocationManager locationManager;
     private LocationListener locationListener;
     private static final int LOCATION_INTERVAL = 1000; //1000 = 1second
-    private static final float LOCATION_DISTANCE = 0; // M단위
+    private static final float LOCATION_DISTANCE = 1; // M단위
     private double longitude;
     private double latitude;
 
     //AccidentData
-    private AccidentData accidentData = new AccidentData("false","false","false",0,0);
+    private AccidentData accidentData = new AccidentData("false","false","false",0,0,0);
+
+    int NetWorkTest=0;
 
     public MyService() {
     }
@@ -98,8 +106,9 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         // 서비스가 호출될 때마다 실행
 
-        //GpsPointList 생성
+        //GetAccidentSpace
         GpsPointList = new ArrayList<>();
+        alarmDetector = new AccidentAlarmDetector();
 
         //네트워크 설정
         networkUtil = new NetworkUtil(getApplicationContext());
@@ -214,7 +223,9 @@ public class MyService extends Service {
                                     accidentData.setPhoto(imagefile);
                                     accidentData.setLongitude(longitude);
                                     accidentData.setLatitude(latitude);
+                                    accidentData.setChecksound(1);
                                     Log.e("Test~~~~~~~~~~", accidentData.getUsername());
+                                    runCheck = true;
 
                                     AccidentCheck(accidentData);
                                     /////////////////////////////////////
@@ -233,7 +244,7 @@ public class MyService extends Service {
         mWorkerThread.start();
     }
 
-    void AccidentCheck(AccidentData data){
+   public void AccidentCheck(AccidentData data){
         Intent intent = new Intent(this,WarningActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("AccidentData",data);
@@ -249,8 +260,32 @@ public class MyService extends Service {
                 longitude = location.getLongitude();
                 latitude = location.getLatitude();
                 Log.e(TAG, "longitude = " + longitude + "latitude = " + latitude);
+
+                //5월 31일자 네트워크 테스트
+                /*
+                if(NetWorkTest==0)
+                    NetWorkTest++;
+                else if(NetWorkTest==1){
+                    accidentData.setUsername(username);
+                    accidentData.setPhone(phone);
+                    accidentData.setPhoto(imagefile);
+                    accidentData.setLongitude(longitude);
+                    accidentData.setLatitude(latitude);
+                    accidentData.setChecksound(1);
+                    AccidentCheck(accidentData);
+                    NetWorkTest++;
+                }
+                else if(NetWorkTest==2) {
+                    requestGetGps();
+                    NetWorkTest++;
+                }
+                */
+
                 Toast.makeText(getApplicationContext(),"Respone_Server", Toast.LENGTH_SHORT).show();
-                requestGetGps();
+                if(!runCheck) {
+                    requestGetGps();
+                }
+
             }
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -330,6 +365,13 @@ public class MyService extends Service {
                 getJsonArray(response);
                 //2차 사고 예방 감지 프로그램에 GpsPointList 넣기
                 //성현이와 미팅 필요
+
+                alarmDetector.setAccidentLocation(alarmDetector.makeLocationList(GpsPointList));
+                alarmDetector.set_nowLocation(latitude,longitude);
+                if(alarmDetector.check_alarm()){
+                    accidentData.setChecksound(0);
+                    AccidentCheck(accidentData);
+                }
 
                 //List Clear
                 GpsPointList.clear();

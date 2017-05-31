@@ -31,6 +31,7 @@ public class WarningActivity extends Activity {
     private SoundPool sound;
     public int soundId;
     private int streamId;
+    private int limit_sound=5;
     private MainControl mainControl;
     SoundLoadComplete soundLoadComplete;
     WarningSound warningSound;
@@ -90,13 +91,20 @@ public class WarningActivity extends Activity {
         isGetResult = false;
         streamId = -1;
 
+        accidentData = getIntent().getParcelableExtra("AccidentData");
+
         sound = new SoundPool(1, 3, 0);// maxStreams, streamType, srcQuality
-        soundId = sound.load(this, R.raw.alarm2, 1);
+        if(accidentData.getChecksound()==0) {
+            soundId = sound.load(this, R.raw.chacha, 1);
+            limit_sound = 10;
+        }
+        else {
+            soundId = sound.load(this, R.raw.alarm2, 1);
+            limit_sound = 5;
+        }
+
         mainControl = new MainControl();
         mainControl.start();
-
-        accidentData = getIntent().getParcelableExtra("AccidentData");
-        Log.e("-------------------", accidentData.getUsername());
     }
 
     private class MainControl extends Thread {
@@ -123,14 +131,18 @@ public class WarningActivity extends Activity {
                             e.printStackTrace();
                         }
 
-                        if(isRunning.get() == true) {
+                        //내 차량 사고 발생 시
+                        if(isRunning.get() == true && accidentData.getChecksound() == 1) {
                             Log.d("activity_change", "warning to sound check in main control");
                             Intent soundCheckIntent = new Intent(getApplicationContext(), SoundCheckActivity.class);
                             soundCheckIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                             startActivityForResult(soundCheckIntent, REQUEST_CODE);
                             isGetResult = false;
                             while (isGetResult == false) {};
-
+                        }
+                        //주변 차량 사고 발생 시
+                        else{
+                            finish();
                         }
                     }
                 }
@@ -165,7 +177,7 @@ public class WarningActivity extends Activity {
 
             while (startTime == 0) {
             }
-            while (elapsedTime < 5) {
+            while (elapsedTime < limit_sound) {
                 endTime = System.currentTimeMillis();
                 elapsedTime = (int) (endTime - startTime) / 1000;
             }
@@ -192,7 +204,7 @@ public class WarningActivity extends Activity {
     private String getStringFromBitmap(Bitmap bitmapPicture) {
         String encodedImage;
         ByteArrayOutputStream byteArrayBitmapStream = new ByteArrayOutputStream();
-        bitmapPicture.compress(Bitmap.CompressFormat.PNG, 100, byteArrayBitmapStream);
+        bitmapPicture.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayBitmapStream);
         byte[] b = byteArrayBitmapStream.toByteArray();
         encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
         return encodedImage;

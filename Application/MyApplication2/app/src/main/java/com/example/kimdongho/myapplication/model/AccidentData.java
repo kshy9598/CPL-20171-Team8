@@ -13,14 +13,16 @@ public class AccidentData implements Parcelable {
     private String photo;
     private double longitude;
     private double latitude;
+    private int checksound;
 
-    public AccidentData(String username,String phone,String photo, double longitude, double latitude)
+    public AccidentData(String username,String phone,String photo, double longitude, double latitude, int checksound)
     {
         this.username = username;
         this.phone = phone;
         this.photo = photo;
         this.longitude = longitude;
         this.latitude = latitude;
+        this.checksound = checksound; //0 주변차량 사고발생 , 1 내차량 사고발생
     }
 
     protected AccidentData(Parcel in) {
@@ -29,6 +31,7 @@ public class AccidentData implements Parcelable {
         photo = in.readString();
         longitude = in.readDouble();
         latitude = in.readDouble();
+        checksound = in.readInt();
     }
 
     public static final Creator<AccidentData> CREATOR = new Creator<AccidentData>() {
@@ -53,6 +56,7 @@ public class AccidentData implements Parcelable {
         dest.writeString(photo);
         dest.writeDouble(longitude);
         dest.writeDouble(latitude);
+        dest.writeInt(checksound);
     }
     public void setUsername(String username) {
         this.username = username;
@@ -84,5 +88,13 @@ public class AccidentData implements Parcelable {
 
     public double getLatitude() {
         return latitude;
+    }
+
+    public void setChecksound(int checksound) {
+        this.checksound = checksound;
+    }
+
+    public int getChecksound() {
+        return checksound;
     }
 }
