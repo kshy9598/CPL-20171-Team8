@@ -64,8 +64,8 @@ public class MyService extends Service {
     //Network, Post AccidentInfo
     private NetworkUtil networkUtil;
     private String imagefile="/data/data/com.example.kimdongho.myapplication/accidentImage.jpg";
-    private String username = "KimSH";
-    private String phone ="01043231782";
+    private String username = "KimDongho";
+    private String phone ="01072723768";
 
     //Get AccidentInfo
     private ArrayList<GpsPoint> GpsPointList;
