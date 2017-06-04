@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-const int ACCIDENT_VALUE = 400;
+const int ACCIDENT_VALUE = 300;
 
 class Knock_sensor {
 	private:

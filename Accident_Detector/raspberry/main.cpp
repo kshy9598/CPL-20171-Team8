@@ -76,7 +76,7 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		while(setint){
 			index = get_number(newValue);
 			if(index > 0){
-				if(state < 50){
+				if(state < 30){
 					state++;
 					continue;
 				}
@@ -94,7 +94,7 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 		}
 	}
     
-	index = get_number(newValue);
+	/*index = get_number(newValue);
 	if(index > 0){
 		accelerometer.set_x(newValue);
 		//printf("%d\n", accelerometer.get_x());
@@ -108,19 +108,17 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 	if(index > 0){
 		accelerometer.set_z(newValue);
 		//printf("%d\n", accelerometer.get_z());
-	}
+	}*/
  
     fflush(stdout);
     
-    if(state == 50 && isAccident(knock_sensor, accelerometer)){
-		state = -1000;
+    if(state == 30 && isAccident(knock_sensor, accelerometer)){
+		state = -300;
 		setint = 1;
 		printf("Accident!\n");
-		system("raspistill -q 10 -o image.jpg");
+		system("raspistill -q 10 -o /home/pi/CPL-20171-Team8/Accident_Detector/raspberry/image.jpg	");
 		 
 		char msg[] = "accident";
-		//write_server(client, msg);
-		//sleep(1);
 		send_file_server(client, IMAGEFILE);
 		sleep(1);
 		write_server(client, msg);
@@ -130,8 +128,8 @@ void loop(Knock_sensor knock_sensor, Accelerometer accelerometer){
 
 int isAccident(Knock_sensor knock_sensor, Accelerometer accelerometer)
 {
-	//if(knock_sensor.isAccident() && accelerometer.isAccident()) 
 	if(knock_sensor.isAccident()) 
+	//if(knock_sensor.isAccident() && accelerometer.isAccident()) 
 		return 1;
 		
 	return 0;
